@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7f4">
+    <link rel="icon" href="data:,">
+    <title>Tip Calculator</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #17231f;
+        background: #f5f7f4;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        --green: #167653;
+        --muted: #718078;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 32px 20px;
+      }
+
+      main { width: min(100%, 900px); }
+
+      header { margin: 0 0 28px; text-align: center; }
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--green);
+        font-size: .75rem;
+        font-weight: 750;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+      }
+      h1 { margin: 0; font-size: clamp(2rem, 5vw, 2.8rem); letter-spacing: -.055em; }
+      header p:last-child { margin: 10px 0 0; color: var(--muted); }
+
+      .calculator {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        padding: 32px;
+        border: 1px solid #e8ede8;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 24px 70px rgb(22 48 36 / 9%);
+      }
+
+      .fields { display: grid; align-content: start; gap: 24px; }
+      .field label, legend { display: block; margin-bottom: 10px; font-size: .88rem; font-weight: 700; }
+      .input-wrap { position: relative; }
+      .input-wrap span {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        color: #89968f;
+        transform: translateY(-50%);
+        pointer-events: none;
+      }
+      input {
+        width: 100%;
+        min-height: 50px;
+        padding: 12px 14px;
+        border: 1px solid #dfe6e1;
+        border-radius: 11px;
+        outline: none;
+        background: #fbfcfb;
+        color: #17231f;
+        font: inherit;
+        font-size: 1rem;
+        transition: border-color .15s, box-shadow .15s;
+      }
+      .input-wrap input { padding-left: 34px; }
+      input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgb(22 118 83 / 12%); }
+      input::placeholder { color: #a4aea8; }
+      fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+      legend { padding: 0; }
+      .tip-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .tip-option {
+        min-height: 46px;
+        border: 1px solid #e3e9e5;
+        border-radius: 10px;
+        background: #f8faf8;
+        color: #33423a;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .15s, color .15s, border-color .15s;
+      }
+      .tip-option:hover { border-color: #8dbba7; }
+      .tip-option[aria-pressed="true"] { border-color: var(--green); background: var(--green); color: #fff; }
+      .tip-options input { min-height: 46px; padding: 8px; text-align: center; }
+      .people-label { display: flex; justify-content: space-between; gap: 12px; }
+      .people-label label { margin: 0; }
+      .hint { color: var(--muted); font-size: .75rem; font-weight: 500; }
+      .error { min-height: 1.2em; margin: -14px 0 0; color: #b42318; font-size: .8rem; }
+
+      .result {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 28px;
+        padding: 28px;
+        border-radius: 18px;
+        background: #123d30;
+        color: #fff;
+      }
+      .result-list { display: grid; gap: 28px; }
+      .result-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .result-label { color: #e8f1ec; font-size: .88rem; font-weight: 650; }
+      .result-label small { display: block; margin-top: 5px; color: #9eb9ab; font-size: .75rem; font-weight: 450; }
+      .amount { color: #8fe0b7; font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 750; letter-spacing: -.05em; }
+      .reset {
+        min-height: 46px;
+        border: 0;
+        border-radius: 10px;
+        background: #8fe0b7;
+        color: #123d30;
+        font: inherit;
+        font-size: .84rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+      .reset:hover { background: #b0f0ce; }
+      :focus-visible { outline: 3px solid #f3bb62; outline-offset: 3px; }
+
+      @media (max-width: 680px) {
+        body { place-items: start center; padding: 28px 16px; }
+        header { margin-bottom: 22px; }
+        .calculator { grid-template-columns: 1fr; gap: 24px; padding: 22px; border-radius: 18px; }
+        .result { min-height: 290px; padding: 24px; }
+      }
+      @media (max-width: 380px) {
+        .tip-options { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Good food, fair split</p>
+        <h1>Tip calculator</h1>
+        <p>Work out the tip and split the bill in seconds.</p>
+      </header>
+
+      <section class="calculator" aria-label="Tip calculator">
+        <div class="fields">
+          <div class="field">
+            <label for="bill">Bill amount</label>
+            <div class="input-wrap">
+              <span aria-hidden="true">$</span>
+              <input id="bill" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" autocomplete="off">
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Select tip %</legend>
+            <div class="tip-options" role="group" aria-label="Tip percentage">
+              <button class="tip-option" type="button" data-tip="10" aria-pressed="false">10%</button>
+              <button class="tip-option" type="button" data-tip="15" aria-pressed="true">15%</button>
+              <button class="tip-option" type="button" data-tip="18" aria-pressed="false">18%</button>
+              <button class="tip-option" type="button" data-tip="20" aria-pressed="false">20%</button>
+              <button class="tip-option" type="button" data-tip="25" aria-pressed="false">25%</button>
+              <input id="custom-tip" type="number" min="0" max="100" step="1" inputmode="decimal" placeholder="Custom" aria-label="Custom tip percentage">
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <div class="people-label">
+              <label for="people">Number of people</label>
+              <span class="hint">Including you</span>
+            </div>
+            <div class="input-wrap">
+              <span aria-hidden="true">♙</span>
+              <input id="people" type="number" min="1" step="1" inputmode="numeric" placeholder="1">
+            </div>
+          </div>
+          <p id="error" class="error" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="result" aria-label="Bill split results">
+          <div class="result-list" aria-live="polite">
+            <div class="result-row">
+              <div class="result-label">Tip amount <small>/ person</small></div>
+              <output class="amount" id="tip-result">—</output>
+            </div>
+            <div class="result-row">
+              <div class="result-label">Total per person</div>
+              <output class="amount" id="total-result">—</output>
+            </div>
+          </div>
+          <button class="reset" id="reset" type="button">Reset</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const billInput = document.querySelector("#bill");
+      const peopleInput = document.querySelector("#people");
+      const customTipInput = document.querySelector("#custom-tip");
+      const tipButtons = [...document.querySelectorAll("[data-tip]")];
+      const tipResult = document.querySelector("#tip-result");
+      const totalResult = document.querySelector("#total-result");
+      const error = document.querySelector("#error");
+      let selectedTip = 15;
+
+      const currency = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+      });
+
+      function update() {
+        const bill = Number(billInput.value);
+        const people = Number(peopleInput.value || 1);
+        const tip = customTipInput.value === "" ? selectedTip : Number(customTipInput.value);
+        const invalidBill = billInput.value !== "" && (!Number.isFinite(bill) || bill < 0);
+        const invalidPeople = peopleInput.value !== "" && (!Number.isInteger(people) || people < 1);
+        const invalidTip = customTipInput.value !== "" && (!Number.isFinite(tip) || tip < 0 || tip > 100);
+
+        if (invalidBill || invalidPeople || invalidTip) {
+          error.textContent = invalidBill
+            ? "Enter a valid bill amount."
+            : invalidPeople
+              ? "Enter a whole number of people (at least 1)."
+              : "Enter a tip between 0% and 100%.";
+          tipResult.textContent = "—";
+          totalResult.textContent = "—";
+          return;
+        }
+
+        error.textContent = "";
+        if (billInput.value === "") {
+          tipResult.textContent = "—";
+          totalResult.textContent = "—";
+          return;
+        }
+
+        const tipPerPerson = bill * (tip / 100) / people;
+        const totalPerPerson = (bill * (1 + tip / 100)) / people;
+        tipResult.textContent = currency.format(tipPerPerson);
+        totalResult.textContent = currency.format(totalPerPerson);
+      }
+
+      tipButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          selectedTip = Number(button.dataset.tip);
+          customTipInput.value = "";
+          tipButtons.forEach((option) => option.setAttribute("aria-pressed", String(option === button)));
+          update();
+        });
+      });
+
+      [billInput, peopleInput].forEach((input) => input.addEventListener("input", update));
+      customTipInput.addEventListener("input", () => {
+        if (customTipInput.value !== "") {
+          tipButtons.forEach((button) => button.setAttribute("aria-pressed", "false"));
+        }
+        update();
+      });
+
+      document.querySelector("#reset").addEventListener("click", () => {
+        billInput.value = "";
+        peopleInput.value = "";
+        customTipInput.value = "";
+        selectedTip = 15;
+        tipButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.tip === "15")));
+        update();
+        billInput.focus();
+      });
+
+      update();
+    </script>
+  </body>
+</html>
